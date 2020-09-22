@@ -1,23 +1,30 @@
 package service;
 
+import dao.BaseDAO;
 import dao.CartItemDAO;
+import dao.ItemDAO;
 import dao.UserDAO;
 import exception.IncorrectLogAndPassException;
 import model.Cart;
 import model.CartItem;
+import model.Item;
 import model.User;
 
 public class UserService {
+
+    private static UserDAO userDAO = UserDAO.getUserDAO();
+
     public static User registrationNewUser(User user) {
-        if (UserDAO.searchSuchUser(user.getLogin()) == null) {
-            return UserDAO.saveUser(user);
+
+        if (userDAO.searchSuchUser(user.getLogin()) == null) {
+            return userDAO.save(user);
         } else {
             return null;
         }
     }
 
     public static User userSignIn(String login, String password) throws IncorrectLogAndPassException {
-        User user = UserDAO.searchSuchUser(login);
+        User user = userDAO.searchSuchUser(login);
         if (user != null && user.getPassword().equals(password)) {
             return user;
 
@@ -27,11 +34,6 @@ public class UserService {
         }
     }
 
-    public static CartItem addCartItemToCart(String login, int itemID, int amount) {
-            Cart cart = CartService.createNewCartIfNotExist(UserDAO.searchSuchUser(login));
-            CartItem cartItem = new CartItem(itemID,cart.getId() , amount);
-            return CartItemDAO.saveCartItem(cartItem);
-    }
 
 
 }

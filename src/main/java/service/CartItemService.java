@@ -3,38 +3,47 @@ package service;
 import controller.dto.CartItemDTO;
 import dao.CartDAO;
 import dao.CartItemDAO;
+import dao.ItemDAO;
+import dao.UserDAO;
 import model.Cart;
 import model.CartItem;
+import model.Item;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class CartItemService {
 
-    public static ArrayList getAllCartItems(int userID) {
-        Cart cart = CartDAO.searchCartByUserID(userID);
+    private static UserDAO userDAO = UserDAO.getUserDAO();
+    private static CartItemDAO cartItemDAO = CartItemDAO.getCartItemDAO();
+    private static CartDAO cartDAO = CartDAO.getCartDAO();
+    private static ItemDAO itemDAO = ItemDAO.getItemDAO();
+
+    public static List getAllCartItems(int userID) {
+        Cart cart = cartDAO.searchCartByUserID(userID);
         if (cart != null) {
-            ArrayList<CartItem> cartItems = CartItemDAO.searchAllCartItemsByCartID(cart.getId());
+            List<CartItem> cartItems = cartItemDAO.searchAllCartItemsByCartID(cart.getId());
             return cartItems;
         } else return null;
     }
 
     public static void buy(int userID) {
-        ArrayList<CartItem> cartItems = getAllCartItems(userID);
+        List<CartItem> cartItems = getAllCartItems(userID);
         for (int i = 0; i < cartItems.size(); i++) {
-            CartItemDAO.deleteCartItem(cartItems.get(i).getId());
+            cartItemDAO.delete(cartItems.get(i));
         }
-        Cart cart = CartDAO.searchCartByUserID(userID);
-        CartDAO.deleteCart(cart.getId());
+        Cart cart = cartDAO.searchCartByUserID(userID);
+        cartDAO.delete(cart);
     }
 
     public static ArrayList getAllItemsInCart(int userID) {
-        ArrayList<CartItem> cartItems = getAllCartItems(userID);
+        List<CartItem> cartItems = getAllCartItems(userID);
         if (cartItems != null) {
             ArrayList<Integer> idOfItems = new ArrayList<>();
             for (int i = 0; i < cartItems.size(); i++) {
-                idOfItems.add(cartItems.get(i).getItemID());
+                idOfItems.add(cartItems.get(i).getItem().getId());
             }
             Set<Integer> hs = new HashSet<>();
             hs.addAll(idOfItems);
@@ -45,20 +54,22 @@ public class CartItemService {
             for (int i = 0; i < idOfItems.size(); i++) {
                 int amount = 0;
                 for (int j = 0; j < cartItems.size(); j++) {
-                    if (idOfItems.get(i) == cartItems.get(j).getItemID()) {
+                    if (idOfItems.get(i) == cartItems.get(j).getItem().getId()) {
                         amount += cartItems.get(j).getAmount();
                     }
                 }
-                CartItem cartItem = new CartItem(idOfItems.get(i), cartItems.get(0).getCartID(), amount);
+                Item item = itemDAO.findById(idOfItems.get(i));
+                CartItem cartItem = new CartItem(item, cartItems.get(0).getCart(), amount);
                 for (int n = 0; n < cartItems.size(); n++) {
-                    if (cartItems.get(n).getItemID() == idOfItems.get(i)) {
+                    if (cartItems.get(n).getItem().getId() == idOfItems.get(i)) {
                         middle.add(cartItems.get(n));
                     }
                 }
                 for (int n = 0; n < middle.size() - 1; n++) {
-                    CartItemDAO.deleteCartItem(middle.get(n).getId());
+                    cartItemDAO.delete(middle.get(n));
                 }
-                cartItem = CartItemDAO.updateCartItem(cartItem, middle.get(middle.size() - 1).getId());
+                cartItem.setId(middle.get(middle.size() - 1).getId());
+                cartItem = cartItemDAO.update(cartItem);
                 middle.clear();
                 result.add(cartItem);
             }
@@ -67,20 +78,20 @@ public class CartItemService {
         } else return null;
     }
 
-    public static ArrayList getCartItemsDTO(int userID) {
-        getAllItemsInCart(userID);
-        Cart cart = CartDAO.searchCartByUserID(userID);
-        if (cart != null) {
-            ArrayList<CartItemDTO> cartItemDTOs = CartItemDAO.getCartItemDTOByCartID(cart.getId());
-            return cartItemDTOs;
-        } else return null;
-    }
 
-    public static int getTotalPrice(ArrayList<CartItemDTO> cartItemDTOS) {
+    public static int getTotalPrice(List<CartItemDTO> cartItemDTOS) {
         int total = 0;
         for (int i = 0; i < cartItemDTOS.size(); i++) {
             total += cartItemDTOS.get(i).getFullPrice();
         }
         return total;
     }
+
+    public static CartItem addCartItemToCart(String login, int itemID, int amount) {
+        Cart cart = CartService.createNewCartIfNotExist(userDAO.searchSuchUser(login));
+        Item item = itemDAO.findById(itemID);
+        CartItem cartItem = new CartItem(item, cart, amount);
+        return cartItemDAO.save(cartItem);
+    }
+
 }

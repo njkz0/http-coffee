@@ -1,67 +1,72 @@
 package dao;
 
 import controller.dto.CartItemDTO;
+import factory.HibernateFactory;
 import model.CartItem;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 
+import javax.persistence.Query;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 
-public class CartItemDAO {
+public class CartItemDAO extends BaseDAO<CartItem> {
 
-    public static CartItem saveCartItem(CartItem cartItem) {
-        String sql = "INSERT INTO cart_items(item_id, cart_id, amount) VALUES (?, ?, ?)";
-        String curIdStatement = "SELECT currval(pg_get_serial_sequence('cart_items','id'))";
-        try (Connection connection = ConnectionToDB.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(sql);
-             PreparedStatement idPreparedStatement = connection.prepareStatement(curIdStatement)
-        ) {
-            preparedStatement.setInt(1, cartItem.getItemID());
-            preparedStatement.setInt(2, cartItem.getCartID());
-            preparedStatement.setInt(3, cartItem.getAmount());
-            preparedStatement.executeUpdate();
-            ResultSet resultSet = idPreparedStatement.executeQuery();
-            while (resultSet.next()) {
-                Integer id = resultSet.getInt(1);
-                cartItem.setId(id);
-                return cartItem;
-            }
+    private SessionFactory sessionFactory = HibernateFactory.getSessionFactory();
+    private static CartItemDAO cartItemDAO;
 
-
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-        return null;
+    private CartItemDAO() {
     }
 
-    public static ArrayList searchAllCartItemsByCartID(int cartID) {
-        String sql = "SELECT * FROM cart_items WHERE cart_id IN(?)";
-        try (Connection connection = ConnectionToDB.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-            preparedStatement.setInt(1, cartID);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            ArrayList<CartItem> cartItems = new ArrayList<>();
-            while (resultSet.next()) {
-                int id = resultSet.getInt(1);
-                int itemID = resultSet.getInt(2);
-                int amount = resultSet.getInt(4);
-                cartItems.add(new CartItem().builder()
-                        .id(id)
-                        .itemID(itemID)
-                        .cartID(cartID)
-                        .amount(amount)
-                        .build());
-            }
-            return cartItems;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
+    public static CartItemDAO getCartItemDAO() {
+        if (cartItemDAO == null) {
+            cartItemDAO = new CartItemDAO();
+            return cartItemDAO;
+        } else return cartItemDAO;
+    }
+    /*  public static CartItem saveCartItem(CartItem cartItem) {
+          String sql = "INSERT INTO cart_items(item_id, cart_id, amount) VALUES (?, ?, ?)";
+          String curIdStatement = "SELECT currval(pg_get_serial_sequence('cart_items','id'))";
+          try (Connection connection = ConnectionToDB.getConnection();
+               PreparedStatement preparedStatement = connection.prepareStatement(sql);
+               PreparedStatement idPreparedStatement = connection.prepareStatement(curIdStatement)
+          ) {
+              preparedStatement.setInt(1, cartItem.getItemID());
+              preparedStatement.setInt(2, cartItem.getCartID());
+              preparedStatement.setInt(3, cartItem.getAmount());
+              preparedStatement.executeUpdate();
+              ResultSet resultSet = idPreparedStatement.executeQuery();
+              while (resultSet.next()) {
+                  Integer id = resultSet.getInt(1);
+                  cartItem.setId(id);
+                  return cartItem;
+              }
+
+
+          } catch (SQLException throwables) {
+              throwables.printStackTrace();
+          }
+          return null;
+      }
+  */
+    public List searchAllCartItemsByCartID(int cartID) {
+        Session session = sessionFactory.openSession();
+        session.getTransaction().begin();
+        String sql = "SELECT * FROM cart_items WHERE cart_id IN(:cartID)";
+        Query query = session.getNamedNativeQuery(sql);
+        query.setParameter("cartID", cartID);
+        List<CartItem> cartItems = query.getResultList();
+        session.close();
+        return cartItems;
+
+
     }
 
-    public static CartItem updateCartItem(CartItem newCartItem, int changedCartItemID) {
+   /* public static CartItem updateCartItem(CartItem newCartItem, int changedCartItemID) {
         String sql = "UPDATE cart_items SET item_id=?, cart_id=?, amount=? WHERE id=?";
         try (Connection connection = ConnectionToDB.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -89,9 +94,9 @@ public class CartItemDAO {
             e.printStackTrace();
         }
     }
+*/
 
-
-    public static ArrayList getCartItemDTOByCartID(int cartID) {
+  /*  public static ArrayList getCartItemDTOByCartID(int cartID) {
         String sql = " SELECT * FROM cart_items ci FULL OUTER JOIN items i ON ci.item_id=i.id WHERE cart_id=?";
         ArrayList<CartItemDTO> cartItemDTOs = new ArrayList<>();
         try (Connection connection = ConnectionToDB.getConnection();
@@ -111,5 +116,5 @@ public class CartItemDAO {
         }
 
         return null;
-    }
+    }*/
 }

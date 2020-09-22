@@ -3,13 +3,21 @@ package model;
 
 import lombok.*;
 
-@Setter
-@Getter
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+
+@Data
 @NoArgsConstructor
 @Builder
 @AllArgsConstructor
-public class Item {
-    private int id;
+
+@Entity
+@Table(name = "items")
+public class Item extends BaseEntity {
+    //private int id;
+    @Column
     private String name;
-    private int price;
+    @Column
+    private Integer price;
 }

@@ -3,20 +3,28 @@ package model;
 
 import lombok.*;
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Setter
-@Getter
-@Builder
-public class CartItem {
-    private int id;
-    private int itemID;
-    private int cartID;
-    private int amount;
+import javax.persistence.*;
 
-   public CartItem(int itemID, int cartID, int amount){
-    this.cartID=  cartID;
-    this.itemID= itemID;
+
+@NoArgsConstructor
+@Data
+@Builder
+
+@Entity
+@Table (name = "cart_items")
+public class CartItem extends BaseEntity{
+   // private int id;
+    @ManyToOne (targetEntity = Item.class)
+    private Item item;
+   // private Integer itemID;
+    @ManyToOne (targetEntity = Cart.class)
+    private Cart cart;
+    @Column (name = "amount")
+    private Integer amount;
+
+   public CartItem(Item item, Cart cart, int amount){
+    this.cart=  cart;
+    this.item= item;
     this.amount= amount;
    }
 

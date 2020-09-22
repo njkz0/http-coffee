@@ -7,13 +7,15 @@ import model.User;
 
 public class CartService {
 
+    private static UserDAO userDAO = UserDAO.getUserDAO();
+    private static CartDAO cartDAO = CartDAO.getCartDAO();
 
     public static Cart createNewCartIfNotExist(User user)  {
-        if (UserDAO.searchSuchUser(user.getLogin()) != null) {
-            Cart result = CartDAO.searchCartByUserID(user.getId());
+        if (userDAO.searchSuchUser(user.getLogin()) != null) {
+            Cart result = cartDAO.searchCartByUserID(user.getId());
             if (result == null) {
                 result = new Cart(user);
-                return CartDAO.saveCart(result);
+                return cartDAO.save(result);
             } else return result;
         } else return null;
     }
