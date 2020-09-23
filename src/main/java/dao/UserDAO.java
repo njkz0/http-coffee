@@ -34,10 +34,13 @@ public class UserDAO extends BaseDAO<User> {
         Session session = sessionFactory.openSession();
         session.getTransaction().begin();
         String sql = "SELECT * FROM users WHERE login=:login";
-        Query query = session.createNativeQuery(sql);
+        Query query = session.createNativeQuery(sql, User.class);
         query.setParameter("login", userLogin);
-        return  (User) query.getSingleResult();
-
+        List<User> list = query.getResultList();
+        if (list.isEmpty()) {
+            return null;
+        }
+        return list.get(0);
 
     }
 }

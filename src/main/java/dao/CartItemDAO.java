@@ -2,6 +2,7 @@ package dao;
 
 import controller.dto.CartItemDTO;
 import factory.HibernateFactory;
+import model.Cart;
 import model.CartItem;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -57,7 +58,7 @@ public class CartItemDAO extends BaseDAO<CartItem> {
         Session session = sessionFactory.openSession();
         session.getTransaction().begin();
         String sql = "SELECT * FROM cart_items WHERE cart_id IN(:cartID)";
-        Query query = session.getNamedNativeQuery(sql);
+        Query query = session.createNativeQuery(sql, CartItem.class);
         query.setParameter("cartID", cartID);
         List<CartItem> cartItems = query.getResultList();
         session.close();

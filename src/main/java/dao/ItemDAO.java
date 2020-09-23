@@ -31,7 +31,11 @@ public class ItemDAO extends BaseDAO<Item>{
         Session session= sessionFactory.openSession();
         session.getTransaction().begin();
         String sql = "SELECT * FROM items";
-        List<Item> items= session.createNativeQuery(sql).getResultList();
+        List<Item> items= session.createNativeQuery(sql, Item.class).getResultList();
+        if (items.isEmpty()){
+           items.add( itemDAO.save(new Item("Iphone XR", 60000)));
+            items.add(itemDAO.save(new Item("Samsung Galaxy S", 80000))); //add items if not exist
+        }
         session.close();
         return items;
     }
