@@ -28,40 +28,6 @@ public class CartDAO extends BaseDAO<Cart> {
         } else return cartDAO;
     }
 
-    /*  public static Cart saveCart(Cart cart) {
-          String sql = "INSERT INTO carts(user_id, time) VALUES (?, ?)";
-          String curIdStatement = "SELECT currval(pg_get_serial_sequence('carts','id'))";
-          try (Connection connection = ConnectionToDB.getConnection();
-               PreparedStatement preparedStatement = connection.prepareStatement(sql);
-               PreparedStatement idPreparedStatement = connection.prepareStatement(curIdStatement)
-          ) {
-              preparedStatement.setInt(1, cart.getUserID());
-              preparedStatement.setString(2, cart.getTime());
-              preparedStatement.executeUpdate();
-              ResultSet resultSet = idPreparedStatement.executeQuery();
-              if (resultSet.next()) {
-                  int id = resultSet.getInt(1);
-                  cart.setId(id);
-                  return cart;
-              }
-
-          } catch (SQLException throwables) {
-              throwables.printStackTrace();
-          }
-          return null;
-      }
-
-      public static void deleteCart(int cartID) {
-          String sql = "DELETE FROM carts where id=?";
-          try (Connection connection = ConnectionToDB.getConnection();
-               PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-              preparedStatement.setInt(1, cartID);
-              preparedStatement.executeUpdate();
-          } catch (SQLException e) {
-              e.printStackTrace();
-          }
-      }
-  */
     public Cart searchCartByUserID(Integer userID) {
         try {
             Session session = sessionFactory.openSession();
